@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>CaSudoku</title>
+		<link rel="stylesheet" type="text/css" media="all" href="css/style.css"/>
+		<script type="text/javascript" src="js/jquery.js"></script>
+		<script type="text/javascript" src="js/game.js"></script>
+	</head>
+	<body>
+	<div id="container">
+		<h1>CaSudoku</h1>
+			<div id ="leftCol">
+				<div id="gameStatus">
+					<div id="gameStats">
+						<h3>Time Played</h3>
+						<p>Minutes: <span class="minCounter"></span></p>
+						<p>Seconds: <span class="secCounter"></span></p>
+					</div><!-- Close #gameStats -->
+					<div id="gameComplete">
+						<h2>Puzzle Complete!</h2>
+						<p>Completed in <span class="minCounter"></span> minutes and <span class="secCounter"></span> seconds.</p>
+					</div><!-- Close #gameComplete -->
+				</div><!-- Close #gameStatus -->
+				<h4>Key Pad</h4>
+				<ul id="gameKeypad"> 
+					<li><a id="enter1"  href="#">1</a></li>
+					<li><a id="enter2"  href="#">2</a></li>
+					<li><a id="enter3"  href="#">3</a></li>
+					<li><a id="enter4"  href="#">4</a></li>
+					<li><a id="enter5"  href="#">5</a></li>
+					<li><a id="enter6"  href="#">6</a></li>
+					<li><a id="enter7"  href="#">7</a></li>
+					<li><a id="enter8"  href="#">8</a></li>
+					<li><a id="enter9"  href="#">9</a></li>
+					<li><a id="deleteVal" href="#">Del</a></li>
+				</ul>
+				<p><a id="gameNew" href="">New Game</a></p>
+			</div><!-- Close #leftCol -->
+			<canvas id="gameCanvas" width="600" height="600">
+				<p>Your browser is unsupported, please use <a href="http://www.google.com/chrome/">Google Chrome</a> to use this application.</p>
+			</canvas>		
+		</div><!-- Close #container -->
+	</body>
+</html>
