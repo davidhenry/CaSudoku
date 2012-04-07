@@ -70,13 +70,11 @@ $(document).ready(function() {
 		});
 		
 		start = function() {
+			CASUDOKU.timer.start();
+			
 			//Generate new puzzle
 			var puzzle = CASUDOKU.puzzle();
-			
-			//Pass new puzzle to the board
 			CASUDOKU.board.set_puzzle(puzzle);
-			
-			CASUDOKU.timer.start();
 		};
 		
 		over = function() {
@@ -99,35 +97,28 @@ $(document).ready(function() {
 	}());
 	
 	CASUDOKU.timer = (function() {
-		// Reset secCounter and increment 
-		// minCounter every minute
-		
 		var minTimeout,
 			secTimeout,
 		    seconds = 0,
 			minutes = 0,
-			secCounter = $(".secCounter"),
-			minCounter = $(".minCounter");
-		
-		// Set initial values
-		minCounter.html("0");
-		secCounter.html("0");
+			secCounter = $("#secCounter"),
+			minCounter = $("#minCounter");
 			
 		start = function() {
 			min_timer();
 			sec_timer();
-		},
+		};
 		
 		min_timer = function() {
 			minCounter.html(minutes++);
 			seconds = 0;
 			minTimeout = setTimeout(min_timer, 60000);
-		},
+		};
 
 		sec_timer = function() {
 			secCounter.html(seconds++);
 			secTimeout = setTimeout(sec_timer, 1000);
-		},
+		};
 		
 		restart = function() {
 			clearTimeout(secTimeout);
@@ -341,23 +332,23 @@ $(document).ready(function() {
 				if (col < (numCols - 1) && pressed == keycode.arrowRight) {
 					selectedCellIndex++;
 					refresh_board();
-				}
+				};
 
 				if (col > 0 && pressed == keycode.arrowLeft) {
 					selectedCellIndex--;
 					refresh_board();
-				}
+				};
 				
 				if (row < (numRows - 1) && pressed == keycode.arrowDown) {
 					selectedCellIndex += numCols;
 					refresh_board();
-				}
+				};
 				
 				if (row > 0 && pressed == keycode.arrowUp) {
 					selectedCellIndex -= numCols;
 					refresh_board();
-				}
-			}
+				};
+			};
 		});
 		
 		set_puzzle = function(newPuzzle) {
@@ -486,7 +477,7 @@ $(document).ready(function() {
 				}
 				else {
 					context.fillStyle = "#EEEEEE";
-				}
+				};
 				
 				// Cell background
 				context.fillRect(cellPosX, cellPosY, cellWidth, cellHeight);
@@ -505,8 +496,6 @@ $(document).ready(function() {
 		};
 				
 		update_cell = function (value) {
-			// updates cell values
-			
 			if (!grid[selectedCellIndex].isDefault) {
 				grid[selectedCellIndex].value = value;
 				refresh_board();
@@ -599,7 +588,7 @@ $(document).ready(function() {
 				for (r = 0; r < 729; ++r) sr[r] = 0; // no row is forbidden
 				for (c = 0; c < 324; ++c) sc[c] = 9; // 9 allowed choices; no constraint has been used
 				for (var i = 0; i < 81; ++i) {
-					var a = _s.charAt(i) >= '1' && _s.charAt(i) <= '9'? _s.charCodeAt(i) - 49 : -1; // number from -1 to 8
+					var a = _s[i] >= 1 && _s[i] <= 9 ? _s[i] - 49 : -1; // number from -1 to 8
 					if (a >= 0) sd_update(sr, sc, i * 9 + a, 1); // set the choice
 					if (a >= 0) ++hints; // count the number of hints
 					cr[i] = cc[i] = -1, out[i] = a + 1;
@@ -644,31 +633,28 @@ $(document).ready(function() {
 			// this is then used to create a new puzzle
 			
 			var puzzleSeed = [], 
-				puzzleSeedSize = [],
+				range = [],
 				randomIndex = [],
-				solver = sudoku_solver(),
-				puzzleSeedStr;
+				solver = sudoku_solver();
 
 			for (var i = 0; i < 81; i++) {
-				// Stores periods to mark empty elements for sudoku_solver()
-				puzzleSeed[i] = ".";
+				// Stores 0 to mark empty cells for sudoku_solver()
+				puzzleSeed[i] = 0;
 				
-				// Stores numbers 0 to 81 to be randomly picked later
-				puzzleSeedSize[i] = i;
+				// Stores numbers 0 to 80 to be randomly picked later
+				range[i] = i;
 			};
 			
 			for (var x = 0; x < 9; x++) {
-				// Pick numbers stored in puzzleSeedSize randomly
-				randomIndex[x] = puzzleSeedSize.splice(Math.random()*puzzleSeedSize.length,1);
+				// Pick numbers stored in range randomly
+				randomIndex[x] = range.splice(Math.random()*range.length,1);
 				
 				// Stores numbers 1 - 9 in a random index
 				puzzleSeed[randomIndex[x]] = (x + 1);
 			};
-
-			puzzleSeedStr = puzzleSeed.join("");
 			
 			// Generate one correct solution
-			solved = solver(puzzleSeedStr, 1);
+			solved = solver(puzzleSeed, 1);
 
 			return solved[0];
 		};
@@ -680,20 +666,20 @@ $(document).ready(function() {
 			var randomIndex = [],
 				newPuzzle = [],
 				solvedPuzzle = make_seed(),
-				puzzleSize = [],
+				range = [],
 				numClues = 23;
 
 			for (var i = 0; i < 81; i++) {
 				// Stores 0 to mark empty cells for CASUDOKU.board.draw()
 				newPuzzle[i] = 0;
 				
-				// Stores numbers 0 to 81 to be randomly picked later
-				puzzleSize[i] = i;
+				// Stores numbers 0 to 80 to be randomly picked later
+				range[i] = i;
 			};
 
 			for (var x = 0; x < numClues; x++) {
-				// Pick numbers stored in puzzleSize randomly
-				randomIndex[x] = puzzleSize.splice(Math.random()*puzzleSize.length,1);
+				// Pick numbers stored in range randomly
+				randomIndex[x] = range.splice(Math.random()*range.length,1);
 				
 				// Store random solutions from solved puzzle to create clues
 				newPuzzle[randomIndex[x]] = solvedPuzzle[randomIndex[x]];
@@ -708,15 +694,13 @@ $(document).ready(function() {
 	CASUDOKU.validator = (function() {
 		check = function(grid) {
 			var correct = false, 
-				solution = "";
+				solution = [];
 				
 			for (var i = 0; i < grid.length; i += 1) {
 				if (grid[i].value !== 0) {
-					// concatenate grid values
-					solution += grid[i].value;
+					solution.push(grid[i].value);
 				};
 			};
-			
 			if (solution.length === 81 && check_total(solution, 405)) {
 				if (correct_rows(solution)){
 					if (correct_cols(solution)) {
@@ -761,7 +745,7 @@ $(document).ready(function() {
 				currentCol = "";
 				colVal = colNum;
 				for (var x = 0; x < 9; x += 1){
-					currentCol += solution.charAt(colVal);
+					currentCol += solution[colVal];
 					colVal += 9;
 				};
 				correctCols += check_unique(currentCol);
@@ -784,7 +768,7 @@ $(document).ready(function() {
 				currentRegion = "";
 				regionVal = regionStart;
 				for (var r = 1; r < 10; r += 1) {
-					currentRegion += solution.charAt(regionVal)
+					currentRegion += solution[regionVal];
 					
 					// Change row within the region
 					if ( r % 3 === 0) {
@@ -814,32 +798,31 @@ $(document).ready(function() {
 			var sum = 0;
 			
 			for (var i = 0; i < numbers.length; i += 1) {
-				sum += parseInt(numbers.charAt(i));
+				sum += numbers[i];
 			};
 			
 			return (sum === total) ? true : false;
 		};
 		
 		check_unique = function(numbers) {
-			// returns 1 (true) if each character in a 
-			// string is unique, 0 (false) if not
+			// returns 1 (true) if each number in an 
+			// array is unique, 0 (false) if not
 			
 			var hash = {},
-			 	result = [],
-				values = numbers.split("");
+			 	result = [];
 				
-		    for ( var i = 0; i < values.length; ++i ) {
+		    for ( var i = 0; i < numbers.length; ++i ) {
 			
 			// only add elements from values array that don't exist in the hash object
-		        if (!hash.hasOwnProperty(values[i]) ) {
-		            hash[ values[i] ] = true;
+		        if (!hash.hasOwnProperty(numbers[i]) ) {
+		            hash[numbers[i]] = true;
 					
 					// store all unique values in new array
-		            result.push(values[i]);
+		            result.push(numbers[i]);
 		        };
 		    };
 			
-			return (result.length === values.length) ? 1 : 0;
+			return (result.length === numbers.length) ? 1 : 0;
 		};
 		
 		// Public api
