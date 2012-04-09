@@ -1,27 +1,28 @@
 /************************************************
-   The MIT License
-
-   Copyright (c) 2012 by David Henry d@jh.io
-
-   Permission is hereby granted, free of charge, to any person obtaining
-   a copy of this software and associated documentation files (the
-   "Software"), to deal in the Software without restriction, including
-   without limitation the rights to use, copy, modify, merge, publish,
-   distribute, sublicense, and/or sell copies of the Software, and to
-   permit persons to whom the Software is furnished to do so, subject to
-   the following conditions:
-
-   The above copyright notice and this permission notice shall be
-   included in all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-   BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
+*  The MIT License
+*
+*  Copyright (c) 2012 by David Henry d@jh.io
+*
+*  Permission is hereby granted, free of charge, to any person obtaining
+*  a copy of this software and associated documentation files (the
+*  "Software"), to deal in the Software without restriction, including
+*  without limitation the rights to use, copy, modify, merge, publish,
+*  distribute, sublicense, and/or sell copies of the Software, and to
+*  permit persons to whom the Software is furnished to do so, subject to
+*  the following conditions:
+*
+*  The above copyright notice and this permission notice shall be
+*  included in all copies or substantial portions of the Software.
+*
+*  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+*  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+*  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+*  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+*  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+*  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+*  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+*  SOFTWARE.
+*
 *************************************************/
 
 $(document).ready(function() {
@@ -62,19 +63,29 @@ $(document).ready(function() {
 		// Game UI
 		var uiStats = $("#gameStats"),
 			uiComplete = $("#gameComplete"),
-			uiReset = $("#gameReset");
-		
-		uiReset.click(function(e) {
+			uiNewGame = $("#gameNew"),
+			gamePadKeys = $("#gameKeypad li a");
+			
+		// GameKeypad Event
+		gamePadKeys.click( function(e) {
 			e.preventDefault();
-			restart();
+			
+			// Parse keycode value
+			var number = parseInt($(this).text(), 10);
+			
+			if (!number) {
+				CASUDOKU.board.update_cell(0);
+			}
+			else {
+				CASUDOKU.board.update_cell(number);
+			};
 		});
 		
 		start = function() {
+			uiComplete.hide();
+			uiStats.show();
 			CASUDOKU.timer.start();
-			
-			//Generate new puzzle
-			var puzzle = CASUDOKU.puzzle();
-			CASUDOKU.board.set_puzzle(puzzle);
+			CASUDOKU.board.set_puzzle();
 		};
 		
 		over = function() {
@@ -83,11 +94,10 @@ $(document).ready(function() {
 			uiComplete.show();
 		};
 		
-		restart = function() {
-			grid = null;
-			CASUDOKU.timer.restart();
+		uiNewGame.click(function(e) {
+			e.preventDefault();
 			CASUDOKU.game.start();
-		};
+		});
 		
 		// Public api
 		return {
@@ -97,53 +107,50 @@ $(document).ready(function() {
 	}());
 	
 	CASUDOKU.timer = (function() {
-		var minTimeout,
-			secTimeout,
-		    seconds = 0,
+		var timeout,
+		    seconds = -1,
 			minutes = 0,
 			secCounter = $("#secCounter"),
 			minCounter = $("#minCounter");
 			
 		start = function() {
-			min_timer();
-			sec_timer();
-		};
-		
-		min_timer = function() {
-			minCounter.html(minutes++);
-			seconds = 0;
-			minTimeout = setTimeout(min_timer, 60000);
-		};
-
-		sec_timer = function() {
-			secCounter.html(seconds++);
-			secTimeout = setTimeout(sec_timer, 1000);
-		};
-		
-		restart = function() {
-			clearTimeout(secTimeout);
-			seconds = 0;
-			secCounter.html(seconds);
-			clearTimeout(minTimeout);
-			minutes = 0;
-			secCounter.html(minutes);
+			if (seconds === 0 && minutes === 0) {
+				timer();
+			}
+			else {
+				stop();
+				seconds = -1;
+				minutes = 0;
+				timer();
+			};
 		};
 		
 		stop = function() {
-			clearTimeout(secTimeout);
-			clearTimeout(minTimeout);
+			clearTimeout(timeout);
+		};
+
+		timer = function() {
+			timeout = setTimeout(timer, 1000);
+			secCounter.html(seconds += 1);
+			
+			if (seconds === 59) {
+				seconds = 0;
+				minCounter.html(minutes += 1);
+			};
 		};
 		
 		// Public api
 		return {
 			start: 	start,
-			stop: 	stop,
-			restart: restart
+			stop: 	stop
 		};
 	}());
 	
 	CASUDOKU.board = (function() {
+		
+		// Stores the cells that make up the sudoku board
 		var grid = [],
+		
 		// Canvas settings
 			canvas = $("#gameCanvas"),
 			context = canvas.get(0).getContext("2d"),
@@ -163,79 +170,27 @@ $(document).ready(function() {
 		
 		//Key Codes
 			keycode = {
-					arrowLeft	: 	37,
-					arrowUp		: 	38,
-					arrowRight	: 	39,
-					arrowDown	: 	40,
+			    arrowLeft: 37,
+			    arrowUp: 38,
+			    arrowRight: 39,
+			    arrowDown: 40,
 
-					zero 		: 	48,
-					one			: 	49,
-					two			: 	50,
-					three		: 	51,
-					four 		: 	52,
-					five		: 	53,
-					six			: 	54,
-					seven		: 	55,
-					eight 		: 	56,
-					nine 		: 	57
+			    zero: 48,
+			    one: 49,
+			    two: 50,
+			    three: 51,
+			    four: 52,
+			    five: 53,
+			    six: 54,
+			    seven: 55,
+			    eight: 56,
+			    nine: 57
 			};
 		// End Var
 		
-		// UI Events			
-		$("#deleteVal").click(function(e) {
-			e.preventDefault();
-			update_cell(" ");
-		});
-
-		$("#enter1").click(function(e) {
-			e.preventDefault();
-			update_cell("1");
-		});
-
-		$("#enter2").click(function(e) {
-			e.preventDefault();
-			update_cell("2");
-		});
-
-		$("#enter3").click(function(e) {
-			e.preventDefault();
-			update_cell("3");
-		});
-
-		$("#enter4").click(function(e) {
-			e.preventDefault();
-			update_cell("4");
-		});
-
-		$("#enter5").click(function(e) {
-			e.preventDefault();
-			update_cell("5");
-		});
-
-		$("#enter6").click(function(e) {
-			e.preventDefault();
-			update_cell("6");
-		});
-
-		$("#enter7").click(function(e) {
-			e.preventDefault();
-			update_cell("7");
-		});
-
-		$("#enter8").click(function(e) {
-			e.preventDefault();
-			update_cell("8");
-		});
-
-		$("#enter9").click(function(e) {
-			e.preventDefault();
-			update_cell("9");
-		});
-		
 		// Keyboard & Mouse Events
 		canvas.click(function (e) {
-			// Calculate position of mouse click
-			// and update selected cell
+			// Calculate position of mouse click and update selected cell
 
 			var xAxis,
 				yAxis,
@@ -279,43 +234,43 @@ $(document).ready(function() {
 			if (enteredChar >= keycode.zero && enteredChar <= keycode.nine) {
 				switch(enteredChar){
 					case keycode.zero:
-					update_cell(" ");
+					update_cell(0);
 					break;
 
 					case keycode.one:
-					update_cell("1");
+					update_cell(1);
 					break;
 
 					case keycode.two:
-					update_cell("2");
+					update_cell(2);
 					break;
 
 					case keycode.three:
-					update_cell("3");
+					update_cell(3);
 					break;
 
 					case keycode.four:
-					update_cell("4");
+					update_cell(4);
 					break;
 
 					case keycode.five:
-					update_cell("5");
+					update_cell(5);
 					break;
 
 					case keycode.six:
-					update_cell("6");
+					update_cell(6);
 					break;
 
 					case keycode.seven:
-					update_cell("7");
+					update_cell(7);
 					break;
 
 					case keycode.eight:
-					update_cell("8");
+					update_cell(8);
 					break;
 
 					case keycode.nine:
-					update_cell("9");
+					update_cell(9);
 					break;
 				};
 			};
@@ -351,8 +306,9 @@ $(document).ready(function() {
 			};
 		});
 		
-		set_puzzle = function(newPuzzle) {
-			make_grid(newPuzzle);
+		set_puzzle = function() {
+			//Generate new puzzle
+			make_grid(CASUDOKU.puzzle.make(24));
 			refresh_board();
 		};
 		
@@ -403,9 +359,7 @@ $(document).ready(function() {
 		
 		refresh_board = function () {
 			var solutionValid = CASUDOKU.validator.check(grid);
-			
 			draw();
-			
 			if (solutionValid) {
 				CASUDOKU.game.over();
 			};
@@ -504,18 +458,18 @@ $(document).ready(function() {
 
 		// Public api
 		return {
-			set_puzzle:set_puzzle
+			set_puzzle:set_puzzle,
+			update_cell:update_cell
 		};
 	}());
 	
 	CASUDOKU.puzzle = (function() {
 		
-		function sudoku_solver() {	
+		function sudoku_solver() {
 			/* The MIT License
 
 			   Copyright (c) 2011 by Attractive Chaos <attractor@live.co.uk>
-
-			   http://attractivechaos.github.com/plb/kudoku.js
+				http://attractivechaos.github.com/plb/kudoku.js
 
 			   Permission is hereby granted, free of charge, to any person obtaining
 			   a copy of this software and associated documentation files (the
@@ -588,7 +542,7 @@ $(document).ready(function() {
 				for (r = 0; r < 729; ++r) sr[r] = 0; // no row is forbidden
 				for (c = 0; c < 324; ++c) sc[c] = 9; // 9 allowed choices; no constraint has been used
 				for (var i = 0; i < 81; ++i) {
-					var a = _s[i] >= 1 && _s[i] <= 9 ? _s[i] - 49 : -1; // number from -1 to 8
+					var a = _s.charAt(i) >= '1' && _s.charAt(i) <= '9'? _s.charCodeAt(i) - 49 : -1; // number from -1 to 8
 					if (a >= 0) sd_update(sr, sc, i * 9 + a, 1); // set the choice
 					if (a >= 0) ++hints; // count the number of hints
 					cr[i] = cc[i] = -1, out[i] = a + 1;
@@ -626,69 +580,59 @@ $(document).ready(function() {
 				}
 				return ret;
 			}
-		};
+		}
 
 		make_seed = function () {
-			// Creates a seed for sudoku_solver to solve
-			// this is then used to create a new puzzle
+			// Generates a minimal sudoku puzzle with the numbers from 1 to 9 randomly
+			// assigned to an array. This is then solved by sudoku_solver to 
+			// create a new completed puzzle.
 			
-			var puzzleSeed = [], 
-				range = [],
-				randomIndex = [],
+			var range = make_range(true, 81),
+				seed = make_range(false, 81),
 				solver = sudoku_solver();
-
-			for (var i = 0; i < 81; i++) {
-				// Stores 0 to mark empty cells for sudoku_solver()
-				puzzleSeed[i] = 0;
-				
-				// Stores numbers 0 to 80 to be randomly picked later
-				range[i] = i;
-			};
 			
+			// Store numbers 1 - 9 in a random index
 			for (var x = 0; x < 9; x++) {
-				// Pick numbers stored in range randomly
-				randomIndex[x] = range.splice(Math.random()*range.length,1);
-				
-				// Stores numbers 1 - 9 in a random index
-				puzzleSeed[randomIndex[x]] = (x + 1);
+				seed[range.splice(Math.random()*range.length,1)] = (x + 1);
 			};
 			
 			// Generate one correct solution
-			solved = solver(puzzleSeed, 1);
+			solved = solver(seed.join(), 1);
 
 			return solved[0];
 		};
 
-		make_puzzle = function () {
-			// Makes a puzzle by randomly adding clues from
-			// the solution generated by make_seed()
+		make_puzzle = function (clues) {
+			var newPuzzle =  make_seed(),
+				range = make_range(true, 81);
 			
-			var randomIndex = [],
-				newPuzzle = [],
-				solvedPuzzle = make_seed(),
-				range = [],
-				numClues = 23;
-
-			for (var i = 0; i < 81; i++) {
-				// Stores 0 to mark empty cells for CASUDOKU.board.draw()
-				newPuzzle[i] = 0;
-				
-				// Stores numbers 0 to 80 to be randomly picked later
-				range[i] = i;
+			// zero out random indexes to create puzzle
+			for (var x = 0; x < (81 - clues); x++) {
+				newPuzzle[range.splice(Math.random()*range.length,1)] = 0;
 			};
-
-			for (var x = 0; x < numClues; x++) {
-				// Pick numbers stored in range randomly
-				randomIndex[x] = range.splice(Math.random()*range.length,1);
-				
-				// Store random solutions from solved puzzle to create clues
-				newPuzzle[randomIndex[x]] = solvedPuzzle[randomIndex[x]];
-			}
 
 			return newPuzzle;
 		};
+		
+		make_range = function (sequential, size) {
+			// returns an array filled with periods or sequential numbers up to the
+			// specified size
+			
+			var range = [];
+			
+			for (var i = 0; i < size; i += 1) {
+				if (sequential) {
+					range[i] = i;
+				}
+				else {
+					range[i] = ".";
+				};
+			};
+			
+			return range;
+		};
 
-		return make_puzzle;
+		return {make: make_puzzle};
 	}());
 
 	CASUDOKU.validator = (function() {
@@ -711,44 +655,49 @@ $(document).ready(function() {
 				};
 			};
 			
+			// Delete solution
+			solution.splice(0, 81);
+			
 			return correct;
 		};
 		
 		correct_rows = function(solution) {
-			// Slices the solution string in to rows
-			// and checks for unique values
+			// Slices the solution array into rows
 			
-			var correctRows = 0, 
-				rowStart = 0, 
-				rowEnd = 8;
+			var correctRows = 0,
+				s = 0, 
+				f = 9;
 				
 			for (var i = 0; i < 9; i += 1) {
-				currentRow = solution.slice(rowStart, rowEnd);
-				correctRows += check_unique(currentRow); 
-				rowStart += 9;
-				rowEnd += 9;
+				// passes the current row as an arguement
+				correctRows += check_unique(solution.slice(s, f));
+				
+				s += 9;
+				f += 9;
 			};
 			
 			return (correctRows === 9) ? true : false;
 		};
 		
 		correct_cols = function(solution) {
-			// Slices the solution string in to cols
-			// and checks for unique values
+			// slices the solution array into columns
 			
 			var correctCols = 0, 
 				colVal, 
 				colNum = 0, 
-				currentCol = "";
-				
-			for (var y = 0; y < 9; y += 1) {
-				currentCol = "";
+				currentCol = [];
+			
+			for (var i = 0; i < 9; i += 1) {
 				colVal = colNum;
-				for (var x = 0; x < 9; x += 1){
-					currentCol += solution[colVal];
+				for (var x = 0; x < 9; x += 1) {
+					currentCol[x] = solution[colVal];
+					
+					// add next item in the column
 					colVal += 9;
 				};
 				correctCols += check_unique(currentCol);
+				
+				// move to next column
 				colNum += 1;
 			};
 			
@@ -756,8 +705,7 @@ $(document).ready(function() {
 		};
 		
 		correct_regions = function(solution) {
-			// Slices the solution string in to regions
-			// and checks for unique values
+			// Slices the solution array into regions
 			
 			var correctRegions = 0, 
 				regionVal = 0, 
@@ -778,7 +726,7 @@ $(document).ready(function() {
 				};
 				correctRegions += check_unique(currentRegion);
 				
-				// change region row
+				// move to next region
 				if ((z +1) % 3 === 0) {
 					regionStart += 21;
 				}
@@ -791,10 +739,6 @@ $(document).ready(function() {
 		};
 		
 		check_total = function(numbers, total) {
-			// parses intergers from a string one
-			// character at a time.
-			// checks that they add up to the total
-			
 			var sum = 0;
 			
 			for (var i = 0; i < numbers.length; i += 1) {
@@ -804,31 +748,28 @@ $(document).ready(function() {
 			return (sum === total) ? true : false;
 		};
 		
-		check_unique = function(numbers) {
-			// returns 1 (true) if each number in an 
-			// array is unique, 0 (false) if not
+		check_unique = function(array) {
+			// returns 1 if each number in an array is unique, 0 if not
 			
 			var hash = {},
 			 	result = [];
-				
-		    for ( var i = 0; i < numbers.length; ++i ) {
 			
-			// only add elements from values array that don't exist in the hash object
-		        if (!hash.hasOwnProperty(numbers[i]) ) {
-		            hash[numbers[i]] = true;
+		    for ( var i = 0; i < array.length; ++i ) {
+			
+			// only add elements from array that don't exist in the hash object
+		        if (!hash.hasOwnProperty(array[i]) ) {
+		            hash[array[i]] = true;
 					
 					// store all unique values in new array
-		            result.push(numbers[i]);
+		            result.push(array[i]);
 		        };
 		    };
 			
-			return (result.length === numbers.length) ? 1 : 0;
+			return (result.length === array.length) ? 1 : 0;
 		};
 		
 		// Public api
-		return {
-			check:check
-		};
+		return {check:check};
 	}());
 	
 	CASUDOKU.game.start();
