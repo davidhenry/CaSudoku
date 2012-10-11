@@ -1,7 +1,7 @@
 /************************************************
 *  The MIT License
 *
-*  Copyright (c) 2012 by David Henry d@jh.io
+*  Copyright (c) 2012 by David Henry get@dh.io
 *
 *  Permission is hereby granted, free of charge, to any person obtaining
 *  a copy of this software and associated documentation files (the
@@ -25,21 +25,20 @@
 *
 *************************************************/
 
-$(document).ready(function() {
-	
+$(document).ready(function () {
 	// Store game in global variable
 	var CASUDOKU = CASUDOKU || {};
-	
+
 	CASUDOKU.namespace = function (ns_string) {
 		var parts = ns_string.split("."),
 		parent = CASUDOKU,
 		i;
-	
+
 		// strip redundant leading global
 		if (parts[0] === "CASUDOKU") {
 			parts = parts.slice(1);
 		}
-	
+
 		for (i = 0; i < parts.length; i += 1) {
 			// create a property if it doesn't exist
 			if (typeof parent[parts[i]] === "undefined") {
@@ -49,70 +48,70 @@ $(document).ready(function() {
 		}
 		return parent;
 	};
-	
-	// Namespaces	
+
+	// Namespaces
 	CASUDOKU.namespace("game");
-	CASUDOKU.namespace("puzzle");
-	CASUDOKU.namespace("board");
 	CASUDOKU.namespace("timer");
+	CASUDOKU.namespace("board");
+	CASUDOKU.namespace("puzzle");
 	CASUDOKU.namespace("validator");
-	
+
 	CASUDOKU.game = (function() {
 		// Controls the state of the game
-		
+
 		// Game UI
-		var uiStats = $("#gameStats"),
-			uiComplete = $("#gameComplete"),
-			uiNewGame = $("#gameNew"),
+		var	uiStats     = $("#gameStats"),
+			uiComplete  = $("#gameComplete"),
+			uiNewGame   = $("#gameNew"),
 			gamePadKeys = $("#gameKeypad li a");
-			
-		// GameKeypad Event
+
+		// GameKeypad Events
 		gamePadKeys.click( function(e) {
 			e.preventDefault();
-			
+
 			// Parse keycode value
 			var number = parseInt($(this).text(), 10);
-			
+
 			if (!number) {
 				CASUDOKU.board.update_cell(0);
 			}
 			else {
 				CASUDOKU.board.update_cell(number);
-			};
+			}
 		});
-		
+
 		start = function() {
 			uiComplete.hide();
 			uiStats.show();
 			CASUDOKU.timer.start();
-			CASUDOKU.board.set_puzzle();
+			CASUDOKU.board.new_puzzle();
 		};
-		
+
 		over = function() {
 			CASUDOKU.timer.stop();
 			uiStats.hide();
 			uiComplete.show();
 		};
-		
+
 		uiNewGame.click(function(e) {
 			e.preventDefault();
 			CASUDOKU.game.start();
 		});
-		
+
 		// Public api
 		return {
 			start: start,
-			over: over 
+			over: over
 		};
 	}());
-	
+
 	CASUDOKU.timer = (function() {
 		var timeout,
-		    seconds = -1,
-			minutes = 0,
+			seconds    = -1,
+			minutes    = 0,
 			secCounter = $("#secCounter"),
 			minCounter = $("#minCounter");
-			
+
 		start = function() {
 			if (seconds === 0 && minutes === 0) {
 				timer();
@@ -121,10 +120,11 @@ $(document).ready(function() {
 				stop();
 				seconds = -1;
 				minutes = 0;
+				minCounter.html(0);
 				timer();
-			};
+			}
 		};
-		
+
 		stop = function() {
 			clearTimeout(timeout);
 		};
@@ -132,62 +132,54 @@ $(document).ready(function() {
 		timer = function() {
 			timeout = setTimeout(timer, 1000);
 			secCounter.html(seconds += 1);
-			
+
 			if (seconds === 59) {
 				seconds = 0;
 				minCounter.html(minutes += 1);
-			};
+			}
 		};
-		
+
 		// Public api
 		return {
-			start: 	start,
-			stop: 	stop
+			start: start,
+			stop: stop
 		};
 	}());
-	
+
 	CASUDOKU.board = (function() {
-		
-		// Stores the cells that make up the sudoku board
+
+		// Stores the cells that make up the Sudoku board
 		var grid = [],
-		
+
 		// Canvas settings
-			canvas = $("#gameCanvas"),
-			context = canvas.get(0).getContext("2d"),
-			canvasWidth	 = canvas.width(),
-			canvasHeight =	canvas.height(),
+			canvas       = $("#gameCanvas"),
+			context      = canvas.get(0).getContext("2d"),
+			canvasWidth  = canvas.width(),
+			canvasHeight = canvas.height(),
 
 		// Board Settings
 			numRows = 9, numCols = 9,
 			regionWidth = canvasWidth/3,
 			regionHeight = canvasHeight/3,
-			
+
 		// Cell Settings
 			cellWidth = canvasWidth/numCols,
 			cellHeight = canvasHeight/numRows,
 			numCells = numRows * numCols,
 			selectedCellIndex = 0,
-		
+
 		//Key Codes
 			keycode = {
-			    arrowLeft: 37,
-			    arrowUp: 38,
-			    arrowRight: 39,
-			    arrowDown: 40,
+				arrowLeft: 37,
+				arrowUp: 38,
+				arrowRight: 39,
+				arrowDown: 40,
 
-			    zero: 48,
-			    one: 49,
-			    two: 50,
-			    three: 51,
-			    four: 52,
-			    five: 53,
-			    six: 54,
-			    seven: 55,
-			    eight: 56,
-			    nine: 57
+				zero: 48,
+				nine: 57
 			};
 		// End Var
-		
+
 		// Keyboard & Mouse Events
 		canvas.click(function (e) {
 			// Calculate position of mouse click and update selected cell
@@ -199,11 +191,11 @@ $(document).ready(function() {
 				resultsX = [],
 				resultsY = [];
 
-			if (e.pageX != undefined && e.pageY != undefined) {
+			if (e.pageX !== undefined && e.pageY !== undefined) {
 				xAxis = e.pageX;
 				yAxis = e.pageY;
-		    }
-		 	else {
+			}
+			else {
 				xAxis = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
 				yAxis = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
 			}
@@ -211,74 +203,31 @@ $(document).ready(function() {
 			xAxis -= canvasOffset.left;
 			yAxis -= canvasOffset.top;
 
-			// Returns the smaller of the two numbers
 			xAxis = Math.min(xAxis, canvasWidth);
 			yAxis = Math.min(yAxis, canvasHeight);
 
-			// Rounds a number down
 			xAxis = Math.floor(xAxis/cellWidth);
 			yAxis = Math.floor(yAxis/cellHeight);
-			
-			// Searches for clicked cell
+
+			// Matches clicked coordinates to a cell
 			for (var i = 0; i < numCells; i+= 1) {
 				if (grid[i].col === xAxis && grid[i].row === yAxis) {
 					selectedCellIndex = i;
 					refresh_board();
-				};
-			};
+				}
+			}
 		});
-		
+
 		$(window).keypress(function (e) {
-			var enteredChar = e.which;
-
-			if (enteredChar >= keycode.zero && enteredChar <= keycode.nine) {
-				switch(enteredChar){
-					case keycode.zero:
-					update_cell(0);
-					break;
-
-					case keycode.one:
-					update_cell(1);
-					break;
-
-					case keycode.two:
-					update_cell(2);
-					break;
-
-					case keycode.three:
-					update_cell(3);
-					break;
-
-					case keycode.four:
-					update_cell(4);
-					break;
-
-					case keycode.five:
-					update_cell(5);
-					break;
-
-					case keycode.six:
-					update_cell(6);
-					break;
-
-					case keycode.seven:
-					update_cell(7);
-					break;
-
-					case keycode.eight:
-					update_cell(8);
-					break;
-
-					case keycode.nine:
-					update_cell(9);
-					break;
-				};
-			};
+			if (e.which >= keycode.zero && e.which <= keycode.nine) {
+				// Subtract 48 to get actual number
+				update_cell(e.which - 48);
+			}
 		});
-		
+
 		$(window).keydown(function (e) {
 			// Arrow Key events for changing the selected cell
-			
+
 			var pressed = e.which,
 				col = grid[selectedCellIndex].col,
 				row = grid[selectedCellIndex].row;
@@ -287,97 +236,97 @@ $(document).ready(function() {
 				if (col < (numCols - 1) && pressed == keycode.arrowRight) {
 					selectedCellIndex++;
 					refresh_board();
-				};
+				}
 
 				if (col > 0 && pressed == keycode.arrowLeft) {
 					selectedCellIndex--;
 					refresh_board();
-				};
-				
+				}
+
 				if (row < (numRows - 1) && pressed == keycode.arrowDown) {
 					selectedCellIndex += numCols;
 					refresh_board();
-				};
-				
+				}
+
 				if (row > 0 && pressed == keycode.arrowUp) {
 					selectedCellIndex -= numCols;
 					refresh_board();
-				};
-			};
+				}
+			}
 		});
-		
-		set_puzzle = function() {
+
+		new_puzzle = function() {
 			//Generate new puzzle
-			make_grid(CASUDOKU.puzzle.make(24));
+			make_grid();
 			refresh_board();
 		};
-		
-		make_grid = function(puzzle) {
-			// Makes a grid array filled with
-			// cell instances. Each cell stores one
-			// puzzle value
-			
+
+		make_grid = function() {
+			// Makes a grid array filled with cell instances. Each cell stores
+			// one puzzle value
+
 			var colCounter = 0,
-				rowCounter = 0;
-			
+				rowCounter = 0,
+				puzzle = CASUDOKU.puzzle.make(24);
+
 			// Cell class
 			Cell = function() {
-				
+
 				// set fixed puzzle values
 				this.isDefault = true;
-				
-				this.value;
-				
+
+				this.value = 0;
+
 				// Store position on the canvas
 				this.x = 0;
 				this.y = 0;
-				
+
 				this.col = 0;
-				this.row = 0;	
+				this.row = 0;
 			};
-			
+
 			for (var i = 0; i < puzzle.length; i++) {
 				grid[i] = new Cell();
 				grid[i].value = puzzle[i];
-				
+
 				if (puzzle[i] === 0) {
 					grid[i].isDefault = false;
-				};
+				}
 
 				//Set cell column and row
 				grid[i].col = colCounter;
 				grid[i].row = rowCounter;
 				colCounter++;
-				
+
 				// change row
-				if ((i+1) % 9 == 0) {
+				if ((i+1) % 9 === 0) {
 					rowCounter++;
 					colCounter = 0;
-				};
-			};
+				}
+			}
 		};
-		
+
 		refresh_board = function () {
 			var solutionValid = CASUDOKU.validator.check(grid);
 			draw();
 			if (solutionValid) {
 				CASUDOKU.game.over();
-			};
+			}
 		};
-		
+
 		draw = function () {
 			// renders the canvas
-			
+
 			var regionPosX = 0, regionPosY = 0,
 				cellPosX = 0, cellPosY = 0,
 				textPosX = cellWidth * 0.4, textPosY = cellHeight * 0.65;
-			
+
 			// board outline
 			context.clearRect(0, 0, canvasWidth, canvasHeight);
 			context.strokeRect(0 , 0, canvasWidth, canvasHeight);
 			context.globalCompositeOperation = "destination-over";
 			context.lineWidth = 10;
-			
+
 			// regions
 			for (var x = 0; x < numRows; x++) {
 				context.strokeRect(regionPosX, regionPosY, regionWidth, regionHeight);
@@ -386,85 +335,85 @@ $(document).ready(function() {
 				if (regionPosX == canvasWidth){
 					regionPosY += regionHeight;
 					regionPosX = 0;
-				};		
-			};
+				}
+			}
 
 			// Start to draw the Grid
 			context.beginPath();
 
-			// vertical lines 
-		    for (var x = 0; x <= canvasWidth; x += cellWidth) {
-				context.moveTo(0.5 + x, 0);
-				context.lineTo(0.5 + x, canvasWidth);
-		    }
+			// vertical lines
+			for (var z = 0; z <= canvasWidth; z += cellWidth) {
+				context.moveTo(0.5 + z, 0);
+				context.lineTo(0.5 + z, canvasWidth);
+			}
 
-		    // horizontal lines
-		    for (var y = 0; y <= canvasHeight; y += cellHeight) {
+			// horizontal lines
+			for (var y = 0; y <= canvasHeight; y += cellHeight) {
 				context.moveTo(0, 0.5 + y);
 				context.lineTo(canvasHeight, 0.5 +  y);
-		    }
+			}
 
-		    // cell outline
+			// cell outline
 			context.lineWidth = 2;
-		    context.strokeStyle = "black";
-		    context.stroke();
-			
+			context.strokeStyle = "black";
+			context.stroke();
+
 			for (var i = 0; i < numCells; i++) {
 				grid[i].x = cellPosX;
 				grid[i].y = cellPosY;
-				
+
 				// Cell values
 				if (grid[i].isDefault) {
 					context.font = "bold 1.6em sans-serif";
 					context.fillStyle = "black";
 					context.fillText(grid[i].value, textPosX, textPosY);
 				}
-				if (grid[i].value !== 0 && !grid[i].isDefault1) {
+				if (grid[i].value !== 0 && !grid[i].isDefault) {
 					context.font = "1.4em sans-serif";
 					context.fillStyle = "grey";
 					context.fillText(grid[i].value, textPosX, textPosY);
 				}
-				
+
 				// Cell background colour
 				if (i == selectedCellIndex) {
 					context.fillStyle = "#00B4FF";
 				}
 				else {
 					context.fillStyle = "#EEEEEE";
-				};
-				
+				}
+
 				// Cell background
 				context.fillRect(cellPosX, cellPosY, cellWidth, cellHeight);
-				
+
 				cellPosX += cellWidth;
 				textPosX += cellWidth;
-				
+
 				// Change row
-				if ((i+1) % numRows == 0) {
+				if ((i+1) % numRows === 0) {
 					cellPosX = 0;
 					cellPosY += cellHeight;
 					textPosY += cellHeight;
 					textPosX = cellWidth * 0.4;
-				};		
-			};
+				}
+			}
 		};
-				
+
 		update_cell = function (value) {
 			if (!grid[selectedCellIndex].isDefault) {
 				grid[selectedCellIndex].value = value;
 				refresh_board();
-			};
+			}
 		};
 
 		// Public api
 		return {
-			set_puzzle:set_puzzle,
+			new_puzzle:new_puzzle,
 			update_cell:update_cell
 		};
 	}());
-	
+
 	CASUDOKU.puzzle = (function() {
-		
+
 		function sudoku_solver() {
 			/* The MIT License
 
@@ -537,7 +486,7 @@ $(document).ready(function() {
 				// sr[r]: # times the row is forbidden by others; cr[i]: row chosen at step i
 				// sc[c]: bit 1-7 - # allowed choices; bit 8: the constraint has been used or not
 				// cc[i]: col chosen at step i
-				var sr = [], sc = [], cr = [], cc = [], out = [], ret = []; 
+				var sr = [], sc = [], cr = [], cc = [], out = [], ret = [];
 				if (max_ret == null) max_ret = 2;
 				for (r = 0; r < 729; ++r) sr[r] = 0; // no row is forbidden
 				for (c = 0; c < 324; ++c) sc[c] = 9; // 9 allowed choices; no constraint has been used
@@ -579,23 +528,23 @@ $(document).ready(function() {
 					--i; dir = -1; // backtrack
 				}
 				return ret;
-			}
+			};
 		}
 
 		make_seed = function () {
 			// Generates a minimal sudoku puzzle with the numbers from 1 to 9 randomly
-			// assigned to an array. This is then solved by sudoku_solver to 
-			// create a new completed puzzle.
-			
+			// assigned to an array. This is then solved by sudoku_solver to
+			// create a solved puzzle.
+
 			var range = make_range(true, 81),
 				seed = make_range(false, 81),
 				solver = sudoku_solver();
-			
+
 			// Store numbers 1 - 9 in a random index
-			for (var x = 0; x < 9; x++) {
-				seed[range.splice(Math.random()*range.length,1)] = (x + 1);
-			};
-			
+			for (var x = 1; x < 10; x++) {
+				seed[range.splice(Math.random()*range.length,1)] = x;
+			}
+
 			// Generate one correct solution
 			solved = solver(seed.join(), 1);
 
@@ -605,30 +554,30 @@ $(document).ready(function() {
 		make_puzzle = function (clues) {
 			var newPuzzle =  make_seed(),
 				range = make_range(true, 81);
-			
+
 			// zero out random indexes to create puzzle
 			for (var x = 0; x < (81 - clues); x++) {
 				newPuzzle[range.splice(Math.random()*range.length,1)] = 0;
-			};
+			}
 
 			return newPuzzle;
 		};
-		
+
 		make_range = function (sequential, size) {
 			// returns an array filled with periods or sequential numbers up to the
 			// specified size
-			
+
 			var range = [];
-			
+
 			for (var i = 0; i < size; i += 1) {
 				if (sequential) {
 					range[i] = i;
 				}
 				else {
 					range[i] = ".";
-				};
-			};
-			
+				}
+			}
+
 			return range;
 		};
 
@@ -637,141 +586,143 @@ $(document).ready(function() {
 
 	CASUDOKU.validator = (function() {
 		check = function(grid) {
-			var correct = false, 
+			var correct = false,
 				solution = [];
-				
+
 			for (var i = 0; i < grid.length; i += 1) {
 				if (grid[i].value !== 0) {
 					solution.push(grid[i].value);
-				};
-			};
+				}
+			}
 			if (solution.length === 81 && check_total(solution, 405)) {
 				if (correct_rows(solution)){
 					if (correct_cols(solution)) {
 						if (correct_regions(solution)) {
 							correct = true;
-						};
-					};
-				};
-			};
-			
+						}
+					}
+				}
+			}
+
 			// Delete solution
 			solution.splice(0, 81);
-			
+
 			return correct;
 		};
-		
+
 		correct_rows = function(solution) {
-			// Slices the solution array into rows
-			
+			// checks each row, returns true if all rows are correct
+
 			var correctRows = 0,
-				s = 0, 
-				f = 9;
-				
+				begin = 0,
+				end = 9;
+
+			// Slices the solution array into rows
 			for (var i = 0; i < 9; i += 1) {
-				// passes the current row as an arguement
-				correctRows += check_unique(solution.slice(s, f));
-				
-				s += 9;
-				f += 9;
-			};
-			
+				// passes the current row as an argument
+				correctRows += check_unique(solution.slice(begin, end));
+
+				begin += 9;
+				end += 9;
+			}
+
 			return (correctRows === 9) ? true : false;
 		};
-		
+
 		correct_cols = function(solution) {
-			// slices the solution array into columns
-			
-			var correctCols = 0, 
-				colVal, 
-				colNum = 0, 
+			// checks each column, returns true if all columns are correct
+
+			var correctCols = 0,
+				colVal,
+				colNum = 0,
 				currentCol = [];
-			
+
+			// slices the solution array into columns
 			for (var i = 0; i < 9; i += 1) {
 				colVal = colNum;
 				for (var x = 0; x < 9; x += 1) {
 					currentCol[x] = solution[colVal];
-					
+
 					// add next item in the column
 					colVal += 9;
-				};
+				}
 				correctCols += check_unique(currentCol);
-				
-				// move to next column
+
+				// move to the next column
 				colNum += 1;
-			};
-			
+			}
+
 			return (correctCols === 9) ? true : false;
 		};
-		
+
 		correct_regions = function(solution) {
-			// Slices the solution array into regions
-			
-			var correctRegions = 0, 
-				regionVal = 0, 
-				regionStart = 0, 
+			// checks each region, returns true if all regions are correct
+
+			var correctRegions = 0,
+				regionVal = 0,
+				regionStart = 0,
 				currentRegion = "";
-				
+
+			// Slices the solution array into regions
 			for (var z = 0; z < 9; z += 1 ) {
 				currentRegion = "";
 				regionVal = regionStart;
 				for (var r = 1; r < 10; r += 1) {
 					currentRegion += solution[regionVal];
-					
+
 					// Change row within the region
 					if ( r % 3 === 0) {
 						regionVal += 6;
-					};
+					}
 					regionVal += 1;
-				};
+				}
 				correctRegions += check_unique(currentRegion);
-				
+
 				// move to next region
 				if ((z +1) % 3 === 0) {
 					regionStart += 21;
 				}
 				else {
 					regionStart += 3;
-				};
-			};
-			
+				}
+			}
+
 			return (correctRegions === 9) ? true : false;
 		};
-		
+
 		check_total = function(numbers, total) {
 			var sum = 0;
-			
+
 			for (var i = 0; i < numbers.length; i += 1) {
 				sum += numbers[i];
-			};
-			
+			}
+
 			return (sum === total) ? true : false;
 		};
-		
+
 		check_unique = function(array) {
 			// returns 1 if each number in an array is unique, 0 if not
-			
+
 			var hash = {},
-			 	result = [];
-			
-		    for ( var i = 0; i < array.length; ++i ) {
-			
-			// only add elements from array that don't exist in the hash object
-		        if (!hash.hasOwnProperty(array[i]) ) {
-		            hash[array[i]] = true;
-					
+				result = [];
+
+			for ( var i = 0; i < array.length; ++i ) {
+				// only add elements from array that don't exist in the hash object
+				if (!hash.hasOwnProperty(array[i]) ) {
+					hash[array[i]] = true;
+
 					// store all unique values in new array
-		            result.push(array[i]);
-		        };
-		    };
-			
+					result.push(array[i]);
+				}
+			}
+
 			return (result.length === array.length) ? 1 : 0;
 		};
-		
+
 		// Public api
 		return {check:check};
 	}());
-	
+
 	CASUDOKU.game.start();
 });
 
