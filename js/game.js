@@ -107,10 +107,10 @@ $(document).ready(function () {
 
 	CASUDOKU.timer = (function() {
 		var timeout,
-			seconds    = -1,
+			seconds    = 0,
 			minutes    = 0,
-			secCounter = $("#secCounter"),
-			minCounter = $("#minCounter");
+			secCounter = $(".secCounter"),
+			minCounter = $(".minCounter");
 
 		start = function() {
 			if (seconds === 0 && minutes === 0) {
@@ -118,7 +118,7 @@ $(document).ready(function () {
 			}
 			else {
 				stop();
-				seconds = -1;
+				seconds = 0;
 				minutes = 0;
 				minCounter.html(0);
 				timer();
@@ -131,12 +131,13 @@ $(document).ready(function () {
 
 		timer = function() {
 			timeout = setTimeout(timer, 1000);
-			secCounter.html(seconds += 1);
 
 			if (seconds === 59) {
+				minCounter.html(++minutes);
 				seconds = 0;
-				minCounter.html(minutes += 1);
 			}
+
+			secCounter.html(seconds++);
 		};
 
 		// Public api
@@ -147,7 +148,6 @@ $(document).ready(function () {
 	}());
 
 	CASUDOKU.board = (function() {
-
 		// Stores the cells that make up the Sudoku board
 		var grid = [],
 
@@ -256,18 +256,37 @@ $(document).ready(function () {
 		});
 
 		new_puzzle = function() {
-			//Generate new puzzle
-			make_grid();
-			refresh_board();
+			var	clues = 24,
+				puzzle;
+
+			// use web workers to make puzzle if available
+			if (Modernizr.webworkers) {
+				var workerSudokuSolver = new Worker("js/sudoku-solver.js");
+
+				// Debugging
+				workerSudokuSolver.onerror = function(e){
+					console.log(e.message + " (" + e.filename + ":" + e.lineno + ")");
+				};
+
+				workerSudokuSolver.postMessage(clues);
+
+				workerSudokuSolver.onmessage = function(e) {
+					puzzle = e.data;
+					make_grid(puzzle);
+				};
+			}
+			else {
+				puzzle = CASUDOKU.puzzle.make(clues);
+				make_grid(puzzle);
+			}
 		};
 
-		make_grid = function() {
+		make_grid = function(puzzle) {
 			// Makes a grid array filled with cell instances. Each cell stores
 			// one puzzle value
 
 			var colCounter = 0,
-				rowCounter = 0,
-				puzzle = CASUDOKU.puzzle.make(24);
+				rowCounter = 0;
 
 			// Cell class
 			Cell = function() {
@@ -304,13 +323,35 @@ $(document).ready(function () {
 					colCounter = 0;
 				}
 			}
+			refresh_board();
 		};
 
 		refresh_board = function () {
-			var solutionValid = CASUDOKU.validator.check(grid);
 			draw();
-			if (solutionValid) {
-				CASUDOKU.game.over();
+
+			if (Modernizr.webworkers) {
+				var workerSudokuValidator = new Worker("js/sudoku-validator.js");
+
+				// Debugging
+				workerSudokuValidator.onerror = function(e){
+					console.log(e.message + " (" + e.filename + ":" + e.lineno + ")");
+				};
+
+				workerSudokuValidator.postMessage(grid);
+
+				workerSudokuValidator.onmessage = function(e) {
+					var correct = e.data;
+
+					if (correct) {
+						CASUDOKU.game.over();
+					}
+				};
+			}
+			else {
+				var solutionValid = CASUDOKU.validator.check(grid);
+				if (solutionValid) {
+					CASUDOKU.game.over();
+				}
 			}
 		};
 
@@ -487,7 +528,7 @@ $(document).ready(function () {
 				// sc[c]: bit 1-7 - # allowed choices; bit 8: the constraint has been used or not
 				// cc[i]: col chosen at step i
 				var sr = [], sc = [], cr = [], cc = [], out = [], ret = [];
-				if (max_ret == null) max_ret = 2;
+				if (max_ret == null) max_ret = 1;
 				for (r = 0; r < 729; ++r) sr[r] = 0; // no row is forbidden
 				for (c = 0; c < 324; ++c) sc[c] = 9; // 9 allowed choices; no constraint has been used
 				for (var i = 0; i < 81; ++i) {
@@ -527,7 +568,7 @@ $(document).ready(function () {
 					if (ret.length >= max_ret) return ret;
 					--i; dir = -1; // backtrack
 				}
-				return ret;
+				return ret[0];
 			};
 		}
 
@@ -538,14 +579,14 @@ $(document).ready(function () {
 
 			var range = make_range(true, 81),
 				seed = make_range(false, 81),
-				solver = sudoku_solver();
+				solver = sudoku_solver(),
+				solved;
 
 			// Store numbers 1 - 9 in a random index
 			for (var x = 1; x < 10; x++) {
 				seed[range.splice(Math.random()*range.length,1)] = x;
 			}
 
-			// Generate one correct solution
 			solved = solver(seed.join(), 1);
 
 			return solved[0];
@@ -553,11 +594,13 @@ $(document).ready(function () {
 
 		make_puzzle = function (clues) {
 			var newPuzzle =  make_seed(),
-				range = make_range(true, 81);
+				range = make_range(true, 81),
+				randomNum = 0;
 
 			// zero out random indexes to create puzzle
 			for (var x = 0; x < (81 - clues); x++) {
-				newPuzzle[range.splice(Math.random()*range.length,1)] = 0;
+				randomNum = range.splice(Math.random()*range.length,1);
+				newPuzzle[randomNum] = 0;
 			}
 
 			return newPuzzle;
@@ -585,8 +628,9 @@ $(document).ready(function () {
 	}());
 
 	CASUDOKU.validator = (function() {
+
 		check = function(grid) {
-			var correct = false,
+			var isCorrect = false,
 				solution = [];
 
 			for (var i = 0; i < grid.length; i += 1) {
@@ -598,7 +642,7 @@ $(document).ready(function () {
 				if (correct_rows(solution)){
 					if (correct_cols(solution)) {
 						if (correct_regions(solution)) {
-							correct = true;
+							isCorrect = true;
 						}
 					}
 				}
@@ -607,7 +651,7 @@ $(document).ready(function () {
 			// Delete solution
 			solution.splice(0, 81);
 
-			return correct;
+			return isCorrect;
 		};
 
 		correct_rows = function(solution) {
