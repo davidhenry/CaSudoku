@@ -3,9 +3,10 @@
 	<head>
 		<meta charset="UTF-8">
 		<title>CaSudoku</title>
-		<link rel="stylesheet" type="text/css" media="all" href="css/style.css"/>
-		<script type="text/javascript" src="js/jquery.js"></script>
-		<script type="text/javascript" src="js/game.js"></script>
+		<link rel="stylesheet" href="css/style.css"/>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+		<script src="js/modernizr.min.js"></script>
+		<script src="js/game.js"></script>
 	</head>
 	<body>
 	<div id="container">
@@ -14,16 +15,16 @@
 				<div id="gameStatus">
 					<div id="gameStats">
 						<h3>Time Played</h3>
-						<p>Minutes: <span id="minCounter">0</span></p>
-						<p>Seconds: <span id="secCounter">0</span></p>
+						<p>Minutes: <span class="minCounter">0</span></p>
+						<p>Seconds: <span class="secCounter">0</span></p>
 					</div><!-- Close #gameStats -->
 					<div id="gameComplete">
 						<h2>Puzzle Complete!</h2>
-						<p>Completed in <span id="minCounter"></span> minutes and <span id="secCounter"></span> seconds.</p>
+						<p>Completed in <span class="minCounter"></span> minutes and <span class="secCounter"></span> seconds.</p>
 					</div><!-- Close #gameComplete -->
 				</div><!-- Close #gameStatus -->
 				<h4>Key Pad</h4>
-				<ul id="gameKeypad"> 
+				<ul id="gameKeypad">
 					<li><a href="#">1</a></li>
 					<li><a href="#">2</a></li>
 					<li><a href="#">3</a></li>
@@ -39,7 +40,7 @@
 			</div><!-- Close #leftCol -->
 			<canvas id="gameCanvas" width="600" height="600">
 				<p>Your browser is unsupported, please use <a href="http://www.google.com/chrome/">Google Chrome</a> to use this application.</p>
-			</canvas>		
+			</canvas>
 		</div><!-- Close #container -->
 	</body>
 </html>
