@@ -327,7 +327,6 @@ $(document).ready(function () {
 		};
 
 		refresh_board = function () {
-			draw();
 
 			if (Modernizr.webworkers) {
 				var workerSudokuValidator = new Worker("js/sudoku-validator.js");
@@ -345,6 +344,7 @@ $(document).ready(function () {
 					if (correct) {
 						CASUDOKU.game.over();
 					}
+					draw();
 				};
 			}
 			else {
@@ -352,6 +352,7 @@ $(document).ready(function () {
 				if (solutionValid) {
 					CASUDOKU.game.over();
 				}
+				draw();
 			}
 		};
 
@@ -405,12 +406,12 @@ $(document).ready(function () {
 
 				// Cell values
 				if (grid[i].isDefault) {
-					context.font = "bold 1.6em sans-serif";
+					context.font = "bold 1.6em Droid Sans, sans-serif";
 					context.fillStyle = "black";
 					context.fillText(grid[i].value, textPosX, textPosY);
 				}
 				if (grid[i].value !== 0 && !grid[i].isDefault) {
-					context.font = "1.4em sans-serif";
+					context.font = "1.4em Droid Sans, sans-serif";
 					context.fillStyle = "grey";
 					context.fillText(grid[i].value, textPosX, textPosY);
 				}

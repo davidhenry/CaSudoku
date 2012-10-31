@@ -1,8 +1,4 @@
-/* -------------------------------------------
-project:	CaSudoku
-author:		David Henry
-date:		06/04/2011
-------------------------------------------- */
+@import url(http://fonts.googleapis.com/css?family=Droid+Sans:400,700);
 
 /* RE-SETS
 ------------------------------------------- */
@@ -22,7 +18,7 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 	font-size: 100%;
 	vertical-align: baseline;
 	background: transparent;
-	text-decoration: none; 
+	text-decoration: none;
 	color: #282922
 }
 
@@ -30,11 +26,11 @@ ol, ul {
 	list-style: none;
 }
 
-/* General 
+/* General
 ------------------------------------------- */
 
 body {
-	font-family: Helvetica, sans-serif;
+	font-family: 'Droid Sans', sans-serif;
 	background-color: #515151;
 	font-size: large;
 }
@@ -63,7 +59,7 @@ h4 {
 	margin-bottom: 20px;
 }
 
-/* Layout 
+/* Layout
 ------------------------------------------- */
 
 #container {
@@ -73,11 +69,11 @@ h4 {
 
 #leftCol {
 	width: 300px;
-	float:left;§
+	float:left;
 	margin-right: 30px;
 }
 
-/* GameUi 
+/* GameUi
 ------------------------------------------- */
 
 #gameCanvas {
@@ -95,7 +91,7 @@ h4 {
 	border-radius: 5px
 }
 
-/* Buttons 
+/* Buttons
 ------------------------------------------- */
 
 a {
@@ -142,4 +138,4 @@ ul#gameKeypad li:last-child {
 
 #gameNew:hover {
 	background-color: #649707;
-} 
+}
