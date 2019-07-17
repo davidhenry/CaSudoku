@@ -25,7 +25,7 @@
 *
 *************************************************/
 
-$(document).ready(function () {
+document.addEventListener("DOMContentLoaded", function() { 
 	// Store game in global variable
 	var CASUDOKU = CASUDOKU || {};
 
@@ -60,43 +60,49 @@ $(document).ready(function () {
 		// Controls the state of the game
 
 		// Game UI
-		var	uiStats     = $("#gameStats"),
-			uiComplete  = $("#gameComplete"),
-			uiNewGame   = $("#gameNew"),
-			gamePadKeys = $("#gameKeypad li a");
+		var	uiStats     = document.getElementById("gameStats"),
+			uiComplete  = document.getElementById("gameComplete"),
+			uiNewGame   = document.getElementById("gameNew"),
+			gamePadKeys = document.querySelectorAll("#gameKeypad li a");
 
 		// GameKeypad Events
-		gamePadKeys.click( function(e) {
+		for (var i = gamePadKeys.length - 1; i >= 0; i--) {
+			var key = gamePadKeys[i];
+
+			key.onclick = function(e) {
+				e.preventDefault();
+
+				// Parse keycode value
+				var number = parseInt(e.currentTarget.text(), 10);
+
+				if (typeof number !== "number") {
+					CASUDOKU.board.update_cell(0);
+				} else {
+					CASUDOKU.board.update_cell(number);
+				}
+			}			
+		}
+
+		uiNewGame.onclick = function(e) {
 			e.preventDefault();
 
-			// Parse keycode value
-			var number = parseInt($(this).text(), 10);
-
-			if (!number) {
-				CASUDOKU.board.update_cell(0);
-			}
-			else {
-				CASUDOKU.board.update_cell(number);
-			}
-		});
+			CASUDOKU.game.start();
+		}
 
 		start = function() {
-			uiComplete.hide();
-			uiStats.show();
 			CASUDOKU.timer.start();
 			CASUDOKU.board.new_puzzle();
+
+			uiComplete.style.display = "none";
+			uiStats.style.display = "block";
 		};
 
 		over = function() {
 			CASUDOKU.timer.stop();
-			uiStats.hide();
-			uiComplete.show();
-		};
 
-		uiNewGame.click(function(e) {
-			e.preventDefault();
-			CASUDOKU.game.start();
-		});
+			uiComplete.style.display = "block";
+			uiStats.style.display = "none";
+		};
 
 		// Public api
 		return {
@@ -109,18 +115,17 @@ $(document).ready(function () {
 		var timeout,
 			seconds    = 0,
 			minutes    = 0,
-			secCounter = $(".secCounter"),
-			minCounter = $(".minCounter");
+			secCounter = document.querySelectorAll(".secCounter"),
+			minCounter = document.querySelectorAll(".minCounter");
 
 		start = function() {
 			if (seconds === 0 && minutes === 0) {
 				timer();
-			}
-			else {
+			} else {
 				stop();
 				seconds = 0;
 				minutes = 0;
-				minCounter.html(0);
+				setHTML(minCounter, 0);
 				timer();
 			}
 		};
@@ -129,15 +134,21 @@ $(document).ready(function () {
 			clearTimeout(timeout);
 		};
 
+		setHTML = function(element, time) {
+			element.forEach(function(val) {
+				val.innerText = time;
+			});
+		};
+
 		timer = function() {
 			timeout = setTimeout(timer, 1000);
 
 			if (seconds === 59) {
-				minCounter.html(++minutes);
+				setHTML(minCounter, ++minutes);
 				seconds = 0;
 			}
 
-			secCounter.html(seconds++);
+			setHTML(secCounter, seconds++);
 		};
 
 		// Public api
@@ -152,19 +163,19 @@ $(document).ready(function () {
 		var grid = [],
 
 		// Canvas settings
-			canvas       = $("#gameCanvas"),
-			context      = canvas.get(0).getContext("2d"),
-			canvasWidth  = canvas.width(),
-			canvasHeight = canvas.height(),
+			canvas       = document.getElementById("gameCanvas"),
+			context      = canvas.getContext("2d"),
+			canvasWidth  = canvas.offsetWidth,
+			canvasHeight = canvas.offsetHeight,
 
 		// Board Settings
 			numRows = 9, numCols = 9,
-			regionWidth = canvasWidth/3,
-			regionHeight = canvasHeight/3,
+			regionWidth = canvasWidth / 3,
+			regionHeight = canvasHeight / 3,
 
 		// Cell Settings
-			cellWidth = canvasWidth/numCols,
-			cellHeight = canvasHeight/numRows,
+			cellWidth = canvasWidth / numCols,
+			cellHeight = canvasHeight / numRows,
 			numCells = numRows * numCols,
 			selectedCellIndex = 0,
 
@@ -174,28 +185,33 @@ $(document).ready(function () {
 				arrowUp: 38,
 				arrowRight: 39,
 				arrowDown: 40,
-
 				zero: 48,
 				nine: 57
 			};
 		// End Var
 
 		// Keyboard & Mouse Events
-		canvas.click(function (e) {
+		canvas.addEventListener("click", function (e) {
 			// Calculate position of mouse click and update selected cell
 
 			var xAxis,
 				yAxis,
-				canvasOffset = canvas.offset(),
+				canvasOffset = getOffset(),
 				cellIndex,
 				resultsX = [],
 				resultsY = [];
 
+			function getOffset() {
+				return {
+					left: canvas.getBoundingClientRect().left + window.scrollX,
+					top: canvas.getBoundingClientRect().top + window.scrollY
+				};
+			}
+
 			if (e.pageX !== undefined && e.pageY !== undefined) {
 				xAxis = e.pageX;
 				yAxis = e.pageY;
-			}
-			else {
+			} else {
 				xAxis = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
 				yAxis = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
 			}
@@ -218,14 +234,14 @@ $(document).ready(function () {
 			}
 		});
 
-		$(window).keypress(function (e) {
+		window.addEventListener("keypress", function (e) {
 			if (e.which >= keycode.zero && e.which <= keycode.nine) {
 				// Subtract 48 to get actual number
 				update_cell(e.which - 48);
 			}
 		});
 
-		$(window).keydown(function (e) {
+		window.addEventListener("keydown", function (e) {
 			// Arrow Key events for changing the selected cell
 
 			var pressed = e.which,
@@ -312,13 +328,13 @@ $(document).ready(function () {
 					grid[i].isDefault = false;
 				}
 
-				//Set cell column and row
+				// Set cell column and row
 				grid[i].col = colCounter;
 				grid[i].row = rowCounter;
 				colCounter++;
 
 				// change row
-				if ((i+1) % 9 === 0) {
+				if ((i + 1) % 9 === 0) {
 					rowCounter++;
 					colCounter = 0;
 				}
@@ -431,7 +447,7 @@ $(document).ready(function () {
 				textPosX += cellWidth;
 
 				// Change row
-				if ((i+1) % numRows === 0) {
+				if ((i + 1) % numRows === 0) {
 					cellPosX = 0;
 					cellPosY += cellHeight;
 					textPosY += cellHeight;
@@ -585,7 +601,7 @@ $(document).ready(function () {
 
 			// Store numbers 1 - 9 in a random index
 			for (var x = 1; x < 10; x++) {
-				seed[range.splice(Math.random()*range.length,1)] = x;
+				seed[range.splice(Math.random() * range.length, 1)] = x;
 			}
 
 			solved = solver(seed.join(), 1);
@@ -639,6 +655,7 @@ $(document).ready(function () {
 					solution.push(grid[i].value);
 				}
 			}
+
 			if (solution.length === 81 && check_total(solution, 405)) {
 				if (correct_rows(solution)){
 					if (correct_cols(solution)) {
@@ -685,6 +702,7 @@ $(document).ready(function () {
 			// slices the solution array into columns
 			for (var i = 0; i < 9; i += 1) {
 				colVal = colNum;
+
 				for (var x = 0; x < 9; x += 1) {
 					currentCol[x] = solution[colVal];
 
@@ -712,6 +730,7 @@ $(document).ready(function () {
 			for (var z = 0; z < 9; z += 1 ) {
 				currentRegion = "";
 				regionVal = regionStart;
+
 				for (var r = 1; r < 10; r += 1) {
 					currentRegion += solution[regionVal];
 
@@ -751,7 +770,7 @@ $(document).ready(function () {
 			var hash = {},
 				result = [];
 
-			for ( var i = 0; i < array.length; ++i ) {
+			for (var i = 0; i < array.length; ++i ) {
 				// only add elements from array that don't exist in the hash object
 				if (!hash.hasOwnProperty(array[i]) ) {
 					hash[array[i]] = true;
