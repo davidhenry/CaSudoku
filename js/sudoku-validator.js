@@ -1,15 +1,15 @@
 self.onmessage = function(e) {
-    var grid = e.data,
+    let grid = e.data,
         result = check(grid);
 
     self.postMessage(result);
     self.close();
 
     function check(grid) {
-        var correct = false,
+        let correct = false,
             solution = [];
 
-        for (var i = 0; i < grid.length; i += 1) {
+        for (let i = 0; i < grid.length; i += 1) {
             if (grid[i].value !== 0) {
                 solution.push(grid[i].value);
             }
@@ -33,12 +33,12 @@ self.onmessage = function(e) {
     function correct_rows(solution) {
         // checks each row, returns true if all rows are correct
 
-        var correctRows = 0,
+        let correctRows = 0,
             begin = 0,
             end = 9;
 
         // Slices the solution array into rows
-        for (var i = 0; i < 9; i += 1) {
+        for (let i = 0; i < 9; i += 1) {
             // passes the current row as an argument
             correctRows += check_unique(solution.slice(begin, end));
 
@@ -52,15 +52,15 @@ self.onmessage = function(e) {
     function correct_cols(solution) {
         // checks each column, returns true if all columns are correct
 
-        var correctCols = 0,
+        let correctCols = 0,
             colVal,
             colNum = 0,
             currentCol = [];
 
         // slices the solution array into columns
-        for (var i = 0; i < 9; i += 1) {
+        for (let i = 0; i < 9; i += 1) {
             colVal = colNum;
-            for (var x = 0; x < 9; x += 1) {
+            for (let x = 0; x < 9; x += 1) {
                 currentCol[x] = solution[colVal];
 
                 // add next item in the column
@@ -78,16 +78,16 @@ self.onmessage = function(e) {
     function correct_regions(solution) {
         // checks each region, returns true if all regions are correct
 
-        var correctRegions = 0,
+        let correctRegions = 0,
             regionVal = 0,
             regionStart = 0,
             currentRegion = "";
 
         // Slices the solution array into regions
-        for (var z = 0; z < 9; z += 1 ) {
+        for (let z = 0; z < 9; z += 1 ) {
             currentRegion = "";
             regionVal = regionStart;
-            for (var r = 1; r < 10; r += 1) {
+            for (let r = 1; r < 10; r += 1) {
                 currentRegion += solution[regionVal];
 
                 // Change row within the region
@@ -111,9 +111,9 @@ self.onmessage = function(e) {
     }
 
     function check_total(numbers, total) {
-        var sum = 0;
+        let sum = 0;
 
-        for (var i = 0; i < numbers.length; i += 1) {
+        for (let i = 0; i < numbers.length; i += 1) {
             sum += numbers[i];
         }
 
@@ -123,10 +123,10 @@ self.onmessage = function(e) {
     function check_unique(array) {
         // returns 1 if each number in an array is unique, 0 if not
 
-        var hash = {},
+        let hash = {},
             result = [];
 
-        for ( var i = 0; i < array.length; ++i ) {
+        for (let i = 0; i < array.length; ++i ) {
             // only add elements from array that don't exist in the hash object
             if (!hash.hasOwnProperty(array[i]) ) {
                 hash[array[i]] = true;

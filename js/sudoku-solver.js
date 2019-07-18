@@ -1,5 +1,5 @@
 self.onmessage = function(e) {
-    var clues = e.data,
+    let clues = e.data,
         puzzle = make_puzzle(clues);
 
     self.postMessage(puzzle);
@@ -10,13 +10,13 @@ self.onmessage = function(e) {
         // assigned to an array. This is then solved by sudoku_solver to
         // create a solved puzzle.
 
-        var range = make_range(true, 81),
+        let range = make_range(true, 81),
             seed = make_range(false, 81),
             solver = sudoku_solver(),
             solved;
 
         // Store numbers 1 - 9 in a random index
-        for (var x = 1; x < 10; x++) {
+        for (let x = 1; x < 10; x++) {
             seed[range.splice(Math.random()*range.length,1)] = x;
         }
 
@@ -27,12 +27,12 @@ self.onmessage = function(e) {
     }
 
     function make_puzzle (clues) {
-        var newPuzzle =  make_seed(),
+        let newPuzzle =  make_seed(),
             range = make_range(true, 81),
             randomNum = 0;
 
         // zero out random indexes to create puzzle
-        for (var x = 0; x < (81 - clues); x++) {
+        for (let x = 0; x < (81 - clues); x++) {
             randomNum = range.splice(Math.random()*range.length,1);
             newPuzzle[randomNum] = 0;
         }
