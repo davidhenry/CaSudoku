@@ -239,7 +239,6 @@ document.addEventListener("DOMContentLoaded", function() {
 			let colCounter = 0,
 				rowCounter = 0;
 
-			// Cell class
 			class Cell {
 				constructor() {
 					// set fixed puzzle values
