@@ -1,5 +1,5 @@
-self.onmessage = function(e) {
-    let grid = e.data,
+self.onmessage = function(event) {
+    let grid = event.data,
         result = check(grid);
 
     self.postMessage(result);
@@ -14,7 +14,8 @@ self.onmessage = function(e) {
                 solution.push(grid[i].value);
             }
         }
-        if (solution.length === 81 && check_total(solution, 405)) {
+
+        if (solution.length === 81) {
             if (correct_rows(solution)){
                 if (correct_cols(solution)) {
                     if (correct_regions(solution)) {
@@ -108,16 +109,6 @@ self.onmessage = function(e) {
         }
 
         return (correctRegions === 9) ? true : false;
-    }
-
-    function check_total(numbers, total) {
-        let sum = 0;
-
-        for (let i = 0; i < numbers.length; i += 1) {
-            sum += numbers[i];
-        }
-
-        return (sum === total) ? true : false;
     }
 
     function check_unique(array) {

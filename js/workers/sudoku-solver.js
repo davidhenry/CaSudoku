@@ -1,5 +1,5 @@
-self.onmessage = function(e) {
-    let clues = e.data,
+self.onmessage = function(event) {
+    let clues = event.data,
         puzzle = make_puzzle(clues);
 
     self.postMessage(puzzle);
